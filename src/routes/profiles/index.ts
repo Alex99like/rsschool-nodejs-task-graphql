@@ -8,7 +8,9 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
 ): Promise<void> => {
   fastify.get('/', async function (request, reply): Promise<
     ProfileEntity[]
-  > {});
+  > {
+    return await fastify.db.profiles.findMany()
+  });
 
   fastify.get(
     '/:id',
@@ -17,7 +19,15 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         params: idParamSchema,
       },
     },
-    async function (request, reply): Promise<ProfileEntity> {}
+    async function (request, reply): Promise<ProfileEntity> {
+      const profile = await fastify.db.profiles.findOne({ key: 'id', equals: request.params.id })
+      if (!profile) {
+        reply.statusCode = 404
+        throw new Error('No profile by id')
+      }
+
+      return profile
+    }
   );
 
   fastify.post(
@@ -27,7 +37,18 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         body: createProfileBodySchema,
       },
     },
-    async function (request, reply): Promise<ProfileEntity> {}
+    async function (request, reply): Promise<ProfileEntity> {
+      const userId = await fastify.db.users.findOne({ key: 'id', equals: request.body.userId })
+      const memberType = await fastify.db.memberTypes.findOne({ key: 'id', equals: request.body.memberTypeId })
+      const profile = (await fastify.db.profiles.findMany()).find(profile => profile.userId === userId?.id)
+
+      if (!userId || !memberType || profile) {
+        reply.statusCode = 400
+        throw new Error('Invalid request body')
+      }
+
+      return await fastify.db.profiles.create(request.body)
+    }
   );
 
   fastify.delete(
@@ -37,7 +58,15 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         params: idParamSchema,
       },
     },
-    async function (request, reply): Promise<ProfileEntity> {}
+    async function (request, reply): Promise<ProfileEntity> {
+      const profile = await fastify.db.profiles.findOne({ key: 'id', equals: request.params.id })
+      if (!profile) {
+        reply.statusCode = 400
+        throw new Error('No profile by id')
+      }
+
+      return await fastify.db.profiles.delete(request.params.id)
+    }
   );
 
   fastify.patch(
@@ -48,7 +77,16 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         params: idParamSchema,
       },
     },
-    async function (request, reply): Promise<ProfileEntity> {}
+    async function (request, reply): Promise<ProfileEntity> {
+      const profile = await fastify.db.profiles.findOne({ key: 'id', equals: request.params.id })
+
+      if (!profile) {
+        reply.statusCode = 400
+        throw new Error('No profile by id')
+      }
+
+      return await fastify.db.profiles.change(request.params.id, request.body)
+    }
   );
 };
 
