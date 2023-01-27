@@ -37,7 +37,7 @@ export const subscribeUserInput = new GraphQLInputObjectType({
   },
 });
 
-export const unSubscribeUserDtoInput = new GraphQLInputObjectType({
+export const unSubscribeUserInput = new GraphQLInputObjectType({
   name: 'unSubscribeUserInput',
   fields: {
     id: { type: new GraphQLNonNull(GraphQLID) },
