@@ -29,7 +29,6 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
             source: query,
             variableValues: variables,
           });
-          console.log(result);
 
           return reply.send(result);
         }

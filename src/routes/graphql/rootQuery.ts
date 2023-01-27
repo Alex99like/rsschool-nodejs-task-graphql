@@ -2,14 +2,19 @@ import {GraphQLID, GraphQLList, GraphQLObjectType} from "graphql";
 import {UserGQLType} from "../users/typeGQL";
 import {UserEntity} from "../../utils/DB/entities/DBUsers";
 import {axios} from "../../utils/axios";
-import fetch from "node-fetch";
+import {ProfileGQLType} from "../profiles/typeGQL";
+import {ProfileEntity} from "../../utils/DB/entities/DBProfiles";
+import {PostGQLType} from "../posts/typeGQL";
+import {PostEntity} from "../../utils/DB/entities/DBPosts";
+import {MemberGQLType} from "../member-types/typeGQL";
+import {MemberTypeEntity} from "../../utils/DB/entities/DBMemberTypes";
 
 export const RootQuery: GraphQLObjectType = new GraphQLObjectType({
   name: 'RootQuery',
   fields: {
     users: {
       type: new GraphQLList(UserGQLType),
-      async resolve() {
+      async resolve(parent, args) {
         return await axios.get<UserEntity[]>('users')
       }
     },
@@ -17,9 +22,55 @@ export const RootQuery: GraphQLObjectType = new GraphQLObjectType({
       type: UserGQLType,
       args: { id: { type: GraphQLID } },
       async resolve(parent, args) {
-        const response = await fetch(`http://127.0.0.1:3000/users/${args.id}`);
+        const user = await axios.get<UserEntity>(`users/${args.id}`)
+        if (user.id) return user
+        else throw new Error('User not Found')
+      },
+    },
+    profiles: {
+      type: new GraphQLList(ProfileGQLType),
+      async resolve() {
+        return await axios.get<ProfileEntity[]>(`profiles`);
+      },
+    },
+    profile: {
+      type: ProfileGQLType,
+      args: { id: { type: GraphQLID } },
+      async resolve(parent, args) {
+        const profile = await axios.get<ProfileEntity>(`profiles/${args.id}`);
+        if (profile.id) return profile
+        else throw new Error('Profile not Found')
+      },
+    },
+    posts: {
+      type: new GraphQLList(PostGQLType),
+      async resolve() {
+        return await axios.get<PostEntity[]>('posts');
+      },
+    },
+    post: {
+      type: PostGQLType,
+      args: { id: { type: GraphQLID } },
+      async resolve(parent, args) {
+        const post = await axios.get<PostEntity>(`posts/${args.id}`);
+        if (post.id) return post
+        else throw new Error('Post not Found')
+      },
+    },
+    memberTypes: {
+      type: new GraphQLList(MemberGQLType),
+      async resolve() {
+        return await axios.get<MemberTypeEntity[]>('member-types');
+      },
+    },
+    memberType: {
+      type: MemberGQLType,
+      args: { id: { type: GraphQLID } },
+      async resolve(parent: UserEntity, args: Record<'id', string>) {
+        const memberTypes = await axios.get<MemberTypeEntity>(`member-types/${args.id}`);
 
-        return await response.json();
+        if (memberTypes.id) return memberTypes
+        else throw new Error('MemberType not Found')
       },
     },
   }

@@ -1,4 +1,13 @@
-import {GraphQLID, GraphQLInputObjectType, GraphQLNonNull, GraphQLObjectType, GraphQLString} from "graphql";
+import {
+  GraphQLID,
+  GraphQLInputObjectType,
+  GraphQLList,
+  GraphQLNonNull,
+  GraphQLObjectType,
+  GraphQLString
+} from "graphql";
+import {axios} from "../../utils/axios";
+import {UserEntity} from "../../utils/DB/entities/DBUsers";
 
 export const UserGQLType: GraphQLObjectType = new GraphQLObjectType({
   name: 'User',
@@ -7,6 +16,13 @@ export const UserGQLType: GraphQLObjectType = new GraphQLObjectType({
     firstName: { type: new GraphQLNonNull(GraphQLString) },
     lastName: { type: new GraphQLNonNull(GraphQLString) },
     email: { type: new GraphQLNonNull(GraphQLString) },
+    subscribedToUserIds: {
+      type: new GraphQLList(UserGQLType),
+      async resolve(parent: UserEntity, args) {
+        const users = await axios.get<UserEntity[]>('users')
+        return users.filter(user => user.subscribedToUserIds.includes(parent.id))
+      }
+    }
   })
 })
 

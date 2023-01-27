@@ -1,6 +1,8 @@
 import { GraphQLObjectType} from "graphql";
 import {CreateUserInput, UserGQLType} from "../users/typeGQL";
-import fetch from "node-fetch";
+//import fetch from "node-fetch";
+import {axios} from "../../utils/axios";
+import {UserEntity} from "../../utils/DB/entities/DBUsers";
 
 export const RootMutation: GraphQLObjectType = new GraphQLObjectType({
   name: 'RootMutation',
@@ -12,17 +14,7 @@ export const RootMutation: GraphQLObjectType = new GraphQLObjectType({
         parent,
         argv
       ) {
-        const { firstName, lastName, email } = argv.input;
-        const body = JSON.stringify({ firstName, lastName, email });
-        const response = await fetch(`http://127.0.0.1:3000/users`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body,
-        });
-
-        return await response.json();
+        return await axios.post<UserEntity>('users', argv.input)
       },
     },
   }

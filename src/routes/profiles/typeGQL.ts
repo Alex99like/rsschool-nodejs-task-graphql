@@ -1,4 +1,5 @@
 import {GraphQLID, GraphQLInputObjectType, GraphQLInt, GraphQLNonNull, GraphQLObjectType, GraphQLString} from "graphql";
+import {UserGQLType} from "../users/typeGQL";
 
 export const ProfileGQLType = new GraphQLObjectType({
   name: 'Profile',
@@ -10,7 +11,8 @@ export const ProfileGQLType = new GraphQLObjectType({
     country: { type: new GraphQLNonNull(GraphQLString) },
     street: { type: new GraphQLNonNull(GraphQLString) },
     city: { type: new GraphQLNonNull(GraphQLString) },
-    userId: { type: new GraphQLNonNull(GraphQLID) },
+    userId: { type: UserGQLType
+    },
     memberTypeId: { type: new GraphQLNonNull(GraphQLString) },
   }),
 });
