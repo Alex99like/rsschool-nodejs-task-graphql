@@ -5,8 +5,8 @@ export const ProfileService = {
   getAll: async (fastify: FastifyInstance): Promise<ProfileEntity[]> => {
     return await fastify.db.profiles.findMany()
   },
-  getById: async (fastify: FastifyInstance, profileId: string): Promise<ProfileEntity> => {
-    const profile = await fastify.db.profiles.findOne({ key: 'id', equals: profileId })
+  getById: async (fastify: FastifyInstance, profileId: string, key: keyof ProfileEntity = 'id'): Promise<ProfileEntity> => {
+    const profile = await fastify.db.profiles.findOne({ key: key, equals: profileId })
     if (!profile) {
       throw fastify.httpErrors.notFound('No profile by id')
     }

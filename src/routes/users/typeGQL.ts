@@ -6,14 +6,10 @@ import {
   GraphQLObjectType,
   GraphQLString
 } from "graphql";
-import {axios} from "../../utils/axios";
 import {UserEntity} from "../../utils/DB/entities/DBUsers";
 import {ProfileGQLType} from "../profiles/typeGQL";
-import {ProfileEntity} from "../../utils/DB/entities/DBProfiles";
 import {PostGQLType} from "../posts/typeGQL";
-import {PostEntity} from "../../utils/DB/entities/DBPosts";
-import {MemberGQLType} from "../member-types/typeGQL";
-import {MemberTypeEntity} from "../../utils/DB/entities/DBMemberTypes";
+import {FastifyInstance} from "fastify";
 
 export const UserGQLType: GraphQLObjectType = new GraphQLObjectType({
   name: 'User',
@@ -24,40 +20,32 @@ export const UserGQLType: GraphQLObjectType = new GraphQLObjectType({
     email: { type: new GraphQLNonNull(GraphQLString) },
     subscribedToUser: {
       type: new GraphQLList(UserGQLType),
-      async resolve(parent: UserEntity, args) {
-        const users = await axios.get<UserEntity[]>('users')
+      async resolve(parent: UserEntity, args, fastify: FastifyInstance) {
+        const users = await fastify.db.users.findMany()
         return users.filter(user => user.subscribedToUserIds.includes(parent.id))
       }
     },
     usersSubscribedTo: {
       type: new GraphQLList(UserGQLType),
-      async resolve(parent: UserEntity, args) {
-        const users = await axios.get<UserEntity[]>('users')
+      async resolve(parent: UserEntity, args, fastify: FastifyInstance) {
+        const users = await fastify.db.users.findMany()
         return users.filter(user => parent.subscribedToUserIds.includes(user.id))
       }
     },
     profile: {
       type: ProfileGQLType,
-      async resolve(parent: UserEntity, args) {
-        const profiles = await axios.get<ProfileEntity[]>('profiles')
-        return profiles.find(el => el.userId === parent.id)
+      async resolve(parent: UserEntity, args, fastify: FastifyInstance) {
+        return await fastify.db.profiles.findOne({ key: 'userId', equals: parent.id })
       }
     },
     posts: {
       type: new GraphQLList(PostGQLType),
-      async resolve(parent: UserEntity, args) {
-        const posts = await axios.get<PostEntity[]>('posts')
-        return posts.filter(post => post.userId === parent.id)
+      async resolve(parent: UserEntity, args, fastify: FastifyInstance) {
+        return await fastify.db.posts.findMany({ key: 'userId', equals: parent.id })
       }
     },
-    memberType: {
-      type: MemberGQLType,
-      async resolve(parent: UserEntity, args) {
-        const profiles = await axios.get<ProfileEntity[]>('profiles')
-        const profile = profiles.find(el => el.userId === parent.id)
-        return await axios.get<MemberTypeEntity>(`member-types/${profile?.memberTypeId}`)
-      }
-    }
+    memberType: { type: new GraphQLNonNull(GraphQLString) },
+    subscribedToUserIds: { type: new GraphQLList(GraphQLID) }
   })
 })
 

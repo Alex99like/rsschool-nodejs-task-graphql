@@ -1,4 +1,7 @@
 import {GraphQLID, GraphQLInputObjectType, GraphQLInt, GraphQLNonNull, GraphQLObjectType, GraphQLString} from "graphql";
+import {FastifyInstance} from "fastify";
+import {ProfileEntity} from "../../utils/DB/entities/DBProfiles";
+import {MemberGQLType} from "../member-types/typeGQL";
 
 export const ProfileGQLType = new GraphQLObjectType({
   name: 'Profile',
@@ -11,7 +14,12 @@ export const ProfileGQLType = new GraphQLObjectType({
     street: { type: new GraphQLNonNull(GraphQLString) },
     city: { type: new GraphQLNonNull(GraphQLString) },
     userId: { type: new GraphQLNonNull(GraphQLID) },
-    memberTypeId: { type: new GraphQLNonNull(GraphQLString) },
+    memberTypeId: {
+      type: MemberGQLType,
+      async resolve(parent: ProfileEntity, args, fastify: FastifyInstance) {
+        return await fastify.db.memberTypes.findOne({ key: 'id', equals: parent.memberTypeId })
+      }
+    },
   }),
 });
 
