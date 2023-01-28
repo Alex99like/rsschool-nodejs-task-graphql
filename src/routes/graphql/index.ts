@@ -4,11 +4,6 @@ import {graphql, GraphQLSchema} from "graphql";
 import {RootQuery} from "./rootQuery";
 import {RootMutation} from "./rootMutation";
 
-const schema = new GraphQLSchema({
-  query: RootQuery,
-  mutation: RootMutation
-})
-
 const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
   fastify
 ): Promise<void> => {
@@ -20,6 +15,11 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply) {
+      const schema = new GraphQLSchema({
+        query: await RootQuery(fastify),
+        mutation: RootMutation
+      })
+
       const { query, variables } = request.body;
 
       if (query) {

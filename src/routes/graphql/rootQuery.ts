@@ -1,76 +1,72 @@
 import {GraphQLID, GraphQLList, GraphQLObjectType} from "graphql";
 import {UserGQLType} from "../users/typeGQL";
 import {UserEntity} from "../../utils/DB/entities/DBUsers";
-import {axios} from "../../utils/axios";
 import {ProfileGQLType} from "../profiles/typeGQL";
-import {ProfileEntity} from "../../utils/DB/entities/DBProfiles";
-import {PostGQLType} from "../posts/typeGQL";
-import {PostEntity} from "../../utils/DB/entities/DBPosts";
+import {PostGQLType} from "../posts/typeGQL"
 import {MemberGQLType} from "../member-types/typeGQL";
-import {MemberTypeEntity} from "../../utils/DB/entities/DBMemberTypes";
+import {FastifyInstance} from "fastify";
 
-export const RootQuery: GraphQLObjectType = new GraphQLObjectType({
+export const RootQuery= async (fastify: FastifyInstance): Promise<GraphQLObjectType> => new GraphQLObjectType({
   name: 'RootQuery',
   fields: {
     users: {
       type: new GraphQLList(UserGQLType),
-      async resolve(parent, args) {
-        return await axios.get<UserEntity[]>('users')
+      async resolve() {
+        return await fastify.db.users.findMany()
       }
     },
     profiles: {
       type: new GraphQLList(ProfileGQLType),
       async resolve() {
-        return await axios.get<ProfileEntity[]>(`profiles`);
+        return await fastify.db.profiles.findMany()
       },
     },
     posts: {
       type: new GraphQLList(PostGQLType),
       async resolve() {
-        return await axios.get<PostEntity[]>('posts');
+        return await fastify.db.posts.findMany();
       },
     },
     memberTypes: {
       type: new GraphQLList(MemberGQLType),
       async resolve() {
-        return await axios.get<MemberTypeEntity[]>('member-types');
+        return await fastify.db.memberTypes.findMany()
       },
     },
     user: {
       type: UserGQLType,
       args: { id: { type: GraphQLID } },
-      async resolve(parent, args) {
-        const user = await axios.get<UserEntity>(`users/${args.id}`)
-        if (user.id) return user
-        else throw new Error('User not Found')
+      async resolve(parent, args: Pick<UserEntity, 'id'>) {
+        const user = await fastify.db.users.findOne({ key: 'id', equals: args.id })
+        if (user) return user
+        else throw fastify.httpErrors.notFound()
       },
     },
     profile: {
       type: ProfileGQLType,
       args: { id: { type: GraphQLID } },
-      async resolve(parent, args) {
-        const profile = await axios.get<ProfileEntity>(`profiles/${args.id}`);
-        if (profile.id) return profile
-        else throw new Error('Profile not Found')
+      async resolve(parent, args: Pick<UserEntity, 'id'>) {
+        const profile = await fastify.db.profiles.findOne({ key: 'id', equals: args.id })
+        if (profile) return profile
+        else throw fastify.httpErrors.notFound()
       },
     },
     post: {
       type: PostGQLType,
       args: { id: { type: GraphQLID } },
-      async resolve(parent, args) {
-        const post = await axios.get<PostEntity>(`posts/${args.id}`);
-        if (post.id) return post
-        else throw new Error('Post not Found')
+      async resolve(parent, args: Pick<UserEntity, 'id'>) {
+        const post = await fastify.db.posts.findOne({ key: 'id', equals: args.id })
+        if (post) return post
+        else throw fastify.httpErrors.notFound()
       },
     },
     memberType: {
       type: MemberGQLType,
       args: { id: { type: GraphQLID } },
-      async resolve(parent: UserEntity, args: Record<'id', string>) {
-        const memberTypes = await axios.get<MemberTypeEntity>(`member-types/${args.id}`);
-
-        if (memberTypes.id) return memberTypes
-        else throw new Error('MemberType not Found')
+      async resolve(parent: UserEntity, args: Pick<UserEntity, 'id'>) {
+        const memberType = await fastify.db.memberTypes.findOne({ key: 'id', equals: args.id })
+        if (memberType) return memberType
+        else throw fastify.httpErrors.notFound()
       },
     },
   }
