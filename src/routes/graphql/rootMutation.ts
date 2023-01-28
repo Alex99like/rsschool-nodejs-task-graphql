@@ -6,7 +6,6 @@ import {
   UpdateUserInput,
   UserGQLType
 } from "../users/typeGQL";
-import {axios} from "../../utils/axios";
 import {UserEntity} from "../../utils/DB/entities/DBUsers";
 import {CreateProfileInput, ProfileGQLType, UpdateProfileInput} from "../profiles/typeGQL";
 import {ProfileEntity} from "../../utils/DB/entities/DBProfiles";
@@ -14,8 +13,13 @@ import {CreatePostInput, PostGQLType, UpdatePostInput} from "../posts/typeGQL";
 import {PostEntity} from "../../utils/DB/entities/DBPosts";
 import {MemberGQLType, UpdateMemberInput} from "../member-types/typeGQL";
 import {MemberTypeEntity} from "../../utils/DB/entities/DBMemberTypes";
+import {FastifyInstance} from "fastify";
+import {checkFieldsToCreateProfile, checkFieldsToUpdateProfile} from "../profiles/services";
+import {checkFieldsToCreatePost, checkFieldsToUpdatePost} from "../posts/services";
+import {checkFieldsToUpdateMemberTypes} from "../member-types/services";
+import {subscribeUserService, unSubscribeUserService} from "../users/services";
 
-export const RootMutation: GraphQLObjectType = new GraphQLObjectType({
+export const RootMutation = async (fastify: FastifyInstance): Promise<GraphQLObjectType> => new GraphQLObjectType({
   name: 'RootMutation',
   fields: {
     addUser: {
@@ -23,21 +27,25 @@ export const RootMutation: GraphQLObjectType = new GraphQLObjectType({
       args: { input: { type: CreateUserInput } },
       async resolve(
         parent,
-        argv
+        { input }: { input: Omit<UserEntity, 'subscribedToUserIds' | 'id' > }
       ) {
-        return await axios.post<UserEntity>('users', argv.input)
+        const { email, lastName, firstName } = input
+        const user = await fastify.db.users.create({ email, lastName, firstName })
+        if (user) return user
+        else throw fastify.httpErrors.badRequest()
       },
     },
     updateUser: {
       type: UserGQLType,
       args: { input: { type: UpdateUserInput } },
       async resolve(
-        parent: unknown,
-        argv
+        parent,
+        { input }: { input: Omit<UserEntity, 'subscribedToUserIds'> }
       ) {
-        const user = await axios.pathc<UserEntity>('users', argv.input.id, argv.input)
-        if (user.id) return user
-        else throw new Error('User Not Found')
+        const { email, lastName, firstName, id } = input
+        const user = await fastify.db.users.change(id, { email, lastName, firstName })
+        if (user) return user
+        else throw fastify.httpErrors.badRequest()
       },
     },
     addProfile: {
@@ -45,11 +53,9 @@ export const RootMutation: GraphQLObjectType = new GraphQLObjectType({
       args: { input: { type: CreateProfileInput } },
       async resolve(
         parent,
-        argv
+        { input }: { input: Omit<ProfileEntity, 'id'> }
       ) {
-        const profile = await axios.post<ProfileEntity>('profiles', argv.input)
-        if (profile.id) return profile
-        else throw new Error('No valid body or userId not Found')
+        return await checkFieldsToCreateProfile(fastify, input)
       }
     },
     updateProfile: {
@@ -57,11 +63,9 @@ export const RootMutation: GraphQLObjectType = new GraphQLObjectType({
       args: { input: { type: UpdateProfileInput } },
       async resolve(
         parent,
-        argv
+        { input }: { input: Omit<ProfileEntity, 'userId'> }
       ) {
-        const profile = await axios.pathc<ProfileEntity>('profiles', argv.input.id, argv.input)
-        if (profile.id) return profile
-        else throw new Error('No valid body or userId not Found')
+        return await checkFieldsToUpdateProfile(fastify, input)
       }
     },
     addPost: {
@@ -69,11 +73,9 @@ export const RootMutation: GraphQLObjectType = new GraphQLObjectType({
       args: { input: { type: CreatePostInput } },
       async resolve(
         parent,
-        argv,
+        { input }: { input: Omit<PostEntity, 'id'> },
       ) {
-        const post = await axios.post<PostEntity>('posts', argv.input)
-        if (post.id) return post
-        else throw new Error('No valid body or userId not Found')
+        return await checkFieldsToCreatePost(fastify, input)
       }
     },
     updatePost: {
@@ -81,11 +83,9 @@ export const RootMutation: GraphQLObjectType = new GraphQLObjectType({
       args: { input: { type: UpdatePostInput } },
       async resolve(
         parent,
-        argv,
+        { input }: { input: Omit<PostEntity, 'userId'> },
       ) {
-        const post = await axios.pathc<PostEntity>('posts', argv.input.id, argv.input)
-        if (post.id) return post
-        else throw new Error('No valid body')
+        return await checkFieldsToUpdatePost(fastify, input)
       }
     },
     updateMemberType: {
@@ -93,11 +93,9 @@ export const RootMutation: GraphQLObjectType = new GraphQLObjectType({
       args: { input: { type: UpdateMemberInput } },
       async resolve(
         parent,
-        argv,
+        { input }: { input: MemberTypeEntity },
       ) {
-        const memberType = await axios.pathc<MemberTypeEntity>('member-types', argv.input.id, argv.input)
-        if (memberType.id) return memberType
-        else throw new Error('No valid body')
+        return await checkFieldsToUpdateMemberTypes(fastify, input)
       },
     },
     subscribeUser: {
@@ -105,23 +103,19 @@ export const RootMutation: GraphQLObjectType = new GraphQLObjectType({
       args: { input: { type: SubscribeUserInput } },
       async resolve(
         parent,
-        argv
+        { input }: { input: { id: string, userId: string } }
       ) {
-        const user = await axios.post<UserEntity>(`users/${argv.input.id}/subscribeTo`, argv.input)
-        if (user.id) return user
-        else throw new Error('No valid body or User not Found')
-      },
+        return await subscribeUserService(fastify, input)
+      }
     },
     unSubscribeUser: {
       type: UserGQLType,
       args: { input: { type: UnSubscribeUserInput } },
       async resolve(
-        parent: unknown,
-        argv
+        parent,
+        { input }: { input: { id: string, userId: string } }
       ) {
-        const user = await axios.post<UserEntity>(`users/${argv.input.id}/unsubscribeFrom`, argv.input)
-        if (user.id) return user
-        else throw new Error('No valid body or User not Found')
+        return await unSubscribeUserService(fastify, input)
       },
     },
   }

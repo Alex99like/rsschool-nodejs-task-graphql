@@ -6,6 +6,7 @@ import {
   subscribeBodySchema,
 } from './schemas';
 import type { UserEntity } from '../../utils/DB/entities/DBUsers';
+import {subscribeUserService, unSubscribeUserService} from "./services";
 
 const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
   fastify
@@ -90,18 +91,7 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<UserEntity> {
-      const subscribeUser= await fastify.db.users.findOne({ key: 'id', equals: request.params.id })
-      const thisUser  = await fastify.db.users.findOne({ key: 'id', equals: request.body.userId })
-
-      if (subscribeUser && thisUser) {
-        if (!thisUser.subscribedToUserIds.find(el => el === subscribeUser.id)) {
-          thisUser.subscribedToUserIds.push(subscribeUser.id)
-          return await fastify.db.users.change(thisUser.id, thisUser)
-        }
-      }
-
-      reply.statusCode = 400
-      throw new Error('Invalid body request or id')
+      return await subscribeUserService(fastify, { userId: request.body.userId, id: request.params.id })
     }
   );
 
@@ -114,33 +104,7 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<UserEntity> {
-      const user = await fastify.db.users.findOne({ key: 'id', equals: request.body.userId })
-      const subscribeUser = await fastify.db.users.findOne({ key: 'id', equals: request.params.id })
-
-      if (!subscribeUser || !user || !user.subscribedToUserIds.includes(request.params.id)) {
-        reply.statusCode = 400
-        throw new Error()
-      }
-
-        user.subscribedToUserIds = user.subscribedToUserIds.filter(id => id !== request.params.id)
-        await fastify.db.users.change(user.id, user)
-        return user
-
-      // const subscribeUser= await fastify.db.users.findOne({ key: 'id', equals: request.params.id })
-      // const thisUser  = await fastify.db.users.findOne({ key: 'id', equals: request.body.userId })
-      //
-      // if (subscribeUser && thisUser) {
-      //   const checkSubscribersUser = thisUser?.subscribedToUserIds.includes(subscribeUser?.id)
-      //
-      //   if (checkSubscribersUser) {
-      //     thisUser.subscribedToUserIds = subscribeUser.subscribedToUserIds.filter(id => id !== subscribeUser.id)
-      //     return  await fastify.db.users.change(thisUser.id, thisUser)
-      //   }
-      //   reply.statusCode = 400
-      //   throw new Error('This no user subscribes')
-      // }
-      //
-      // throw new Error('Invalid body request or id')
+      return await unSubscribeUserService(fastify, { userId: request.body.userId, id: request.params.id })
     }
   );
 
