@@ -1,15 +1,10 @@
 import {
   GraphQLID,
   GraphQLInputObjectType,
-  GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
   GraphQLString
 } from "graphql";
-import {UserEntity} from "../../utils/DB/entities/DBUsers";
-import {axios} from "../../utils/axios";
-import {UserGQLType} from "../users/typeGQL";
-import {PostEntity} from "../../utils/DB/entities/DBPosts";
 
 export const PostGQLType = new GraphQLObjectType({
   name: 'Post',
@@ -17,12 +12,7 @@ export const PostGQLType = new GraphQLObjectType({
     id: { type: GraphQLID },
     content: { type: new GraphQLNonNull(GraphQLString) },
     title: { type: new GraphQLNonNull(GraphQLString) },
-    userId: {
-      type: new GraphQLList(UserGQLType),
-      async resolve(parent: PostEntity, args) {
-        return  await axios.get<UserEntity>(`posts/${parent.userId}`)
-      }
-    },
+    userId: { type: new GraphQLNonNull(GraphQLID) },
   }),
 });
 

@@ -1,6 +1,11 @@
 import { GraphQLObjectType} from "graphql";
-import {CreateUserInput, UpdateUserInput, UserGQLType} from "../users/typeGQL";
-//import fetch from "node-fetch";
+import {
+  CreateUserInput,
+  SubscribeUserInput,
+  UnSubscribeUserInput,
+  UpdateUserInput,
+  UserGQLType
+} from "../users/typeGQL";
 import {axios} from "../../utils/axios";
 import {UserEntity} from "../../utils/DB/entities/DBUsers";
 import {CreateProfileInput, ProfileGQLType, UpdateProfileInput} from "../profiles/typeGQL";
@@ -93,6 +98,30 @@ export const RootMutation: GraphQLObjectType = new GraphQLObjectType({
         const memberType = await axios.pathc<MemberTypeEntity>('member-types', argv.input.id, argv.input)
         if (memberType.id) return memberType
         else throw new Error('No valid body')
+      },
+    },
+    subscribeUser: {
+      type: UserGQLType,
+      args: { input: { type: SubscribeUserInput } },
+      async resolve(
+        parent,
+        argv
+      ) {
+        const user = await axios.post<UserEntity>(`users/${argv.input.id}/subscribeTo`, argv.input)
+        if (user.id) return user
+        else throw new Error('No valid body or User not Found')
+      },
+    },
+    unSubscribeUser: {
+      type: UserGQLType,
+      args: { input: { type: UnSubscribeUserInput } },
+      async resolve(
+        parent: unknown,
+        argv
+      ) {
+        const user = await axios.post<UserEntity>(`users/${argv.input.id}/unsubscribeFrom`, argv.input)
+        if (user.id) return user
+        else throw new Error('No valid body or User not Found')
       },
     },
   }
