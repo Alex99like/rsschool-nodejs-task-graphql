@@ -14,10 +14,10 @@ import {PostEntity} from "../../utils/DB/entities/DBPosts";
 import {MemberGQLType, UpdateMemberInput} from "../member-types/typeGQL";
 import {MemberTypeEntity} from "../../utils/DB/entities/DBMemberTypes";
 import {FastifyInstance} from "fastify";
-import {checkFieldsToCreateProfile, checkFieldsToUpdateProfile} from "../profiles/services";
+import {ProfileService} from "../profiles/services";
 import {checkFieldsToCreatePost, checkFieldsToUpdatePost} from "../posts/services";
 import {checkFieldsToUpdateMemberTypes} from "../member-types/services";
-import { UserService} from "../users/services";
+import {UserService} from "../users/services";
 
 export const RootMutation = async (fastify: FastifyInstance): Promise<GraphQLObjectType> => new GraphQLObjectType({
   name: 'RootMutation',
@@ -49,7 +49,7 @@ export const RootMutation = async (fastify: FastifyInstance): Promise<GraphQLObj
         parent,
         { input }: { input: Omit<ProfileEntity, 'id'> }
       ) {
-        return await checkFieldsToCreateProfile(fastify, input)
+        return await ProfileService.create(fastify, input)
       }
     },
     updateProfile: {
@@ -59,7 +59,7 @@ export const RootMutation = async (fastify: FastifyInstance): Promise<GraphQLObj
         parent,
         { input }: { input: Omit<ProfileEntity, 'userId'> }
       ) {
-        return await checkFieldsToUpdateProfile(fastify, input)
+        return await ProfileService.update(fastify, input)
       }
     },
     addPost: {
