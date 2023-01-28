@@ -8,6 +8,7 @@ import {FastifyInstance} from "fastify";
 import {UserService} from "../users/services";
 import {ProfileService} from "../profiles/services";
 import {PostService} from "../posts/services";
+import {MemberTypeService} from "../member-types/services";
 
 export const RootQuery= async (fastify: FastifyInstance): Promise<GraphQLObjectType> => new GraphQLObjectType({
   name: 'RootQuery',
@@ -33,7 +34,7 @@ export const RootQuery= async (fastify: FastifyInstance): Promise<GraphQLObjectT
     memberTypes: {
       type: new GraphQLList(MemberGQLType),
       async resolve() {
-        return await fastify.db.memberTypes.findMany()
+        return await MemberTypeService.getAll(fastify)
       },
     },
     user: {
@@ -61,9 +62,7 @@ export const RootQuery= async (fastify: FastifyInstance): Promise<GraphQLObjectT
       type: MemberGQLType,
       args: { id: { type: GraphQLID } },
       async resolve(parent: UserEntity, args: Pick<UserEntity, 'id'>) {
-        const memberType = await fastify.db.memberTypes.findOne({ key: 'id', equals: args.id })
-        if (memberType) return memberType
-        else throw fastify.httpErrors.notFound()
+        return MemberTypeService.getById(fastify, args.id)
       },
     },
   }
