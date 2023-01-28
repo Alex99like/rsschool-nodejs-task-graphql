@@ -17,7 +17,7 @@ import {FastifyInstance} from "fastify";
 import {checkFieldsToCreateProfile, checkFieldsToUpdateProfile} from "../profiles/services";
 import {checkFieldsToCreatePost, checkFieldsToUpdatePost} from "../posts/services";
 import {checkFieldsToUpdateMemberTypes} from "../member-types/services";
-import {subscribeUserService, unSubscribeUserService} from "../users/services";
+import { UserService} from "../users/services";
 
 export const RootMutation = async (fastify: FastifyInstance): Promise<GraphQLObjectType> => new GraphQLObjectType({
   name: 'RootMutation',
@@ -29,10 +29,7 @@ export const RootMutation = async (fastify: FastifyInstance): Promise<GraphQLObj
         parent,
         { input }: { input: Omit<UserEntity, 'subscribedToUserIds' | 'id' > }
       ) {
-        const { email, lastName, firstName } = input
-        const user = await fastify.db.users.create({ email, lastName, firstName })
-        if (user) return user
-        else throw fastify.httpErrors.badRequest()
+        return await UserService.create(fastify, input)
       },
     },
     updateUser: {
@@ -42,10 +39,7 @@ export const RootMutation = async (fastify: FastifyInstance): Promise<GraphQLObj
         parent,
         { input }: { input: Omit<UserEntity, 'subscribedToUserIds'> }
       ) {
-        const { email, lastName, firstName, id } = input
-        const user = await fastify.db.users.change(id, { email, lastName, firstName })
-        if (user) return user
-        else throw fastify.httpErrors.badRequest()
+        return await UserService.update(fastify,input)
       },
     },
     addProfile: {
@@ -105,7 +99,7 @@ export const RootMutation = async (fastify: FastifyInstance): Promise<GraphQLObj
         parent,
         { input }: { input: { id: string, userId: string } }
       ) {
-        return await subscribeUserService(fastify, input)
+        return await UserService.subscribeUser(fastify, input)
       }
     },
     unSubscribeUser: {
@@ -115,7 +109,7 @@ export const RootMutation = async (fastify: FastifyInstance): Promise<GraphQLObj
         parent,
         { input }: { input: { id: string, userId: string } }
       ) {
-        return await unSubscribeUserService(fastify, input)
+        return await UserService.unSubscribeUser(fastify, input)
       },
     },
   }

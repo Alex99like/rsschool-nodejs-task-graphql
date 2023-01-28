@@ -5,6 +5,7 @@ import {ProfileGQLType} from "../profiles/typeGQL";
 import {PostGQLType} from "../posts/typeGQL"
 import {MemberGQLType} from "../member-types/typeGQL";
 import {FastifyInstance} from "fastify";
+import {UserService} from "../users/services";
 
 export const RootQuery= async (fastify: FastifyInstance): Promise<GraphQLObjectType> => new GraphQLObjectType({
   name: 'RootQuery',
@@ -12,7 +13,7 @@ export const RootQuery= async (fastify: FastifyInstance): Promise<GraphQLObjectT
     users: {
       type: new GraphQLList(UserGQLType),
       async resolve() {
-        return await fastify.db.users.findMany()
+        return await UserService.getAll(fastify)
       }
     },
     profiles: {
@@ -37,9 +38,7 @@ export const RootQuery= async (fastify: FastifyInstance): Promise<GraphQLObjectT
       type: UserGQLType,
       args: { id: { type: GraphQLID } },
       async resolve(parent, args: Pick<UserEntity, 'id'>) {
-        const user = await fastify.db.users.findOne({ key: 'id', equals: args.id })
-        if (user) return user
-        else throw fastify.httpErrors.notFound()
+        return await UserService.getById(fastify, args.id)
       },
     },
     profile: {
