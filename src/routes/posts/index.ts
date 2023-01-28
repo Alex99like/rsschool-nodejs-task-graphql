@@ -2,12 +2,13 @@ import { FastifyPluginAsyncJsonSchemaToTs } from '@fastify/type-provider-json-sc
 import { idParamSchema } from '../../utils/reusedSchemas';
 import { createPostBodySchema, changePostBodySchema } from './schema';
 import type { PostEntity } from '../../utils/DB/entities/DBPosts';
+import {PostService} from "./services";
 
 const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
   fastify
 ): Promise<void> => {
   fastify.get('/', async function (request, reply): Promise<PostEntity[]> {
-    return await fastify.db.posts.findMany()
+    return await PostService.getAll(fastify)
   });
 
   fastify.get(
@@ -18,13 +19,7 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<PostEntity> {
-      const post = await fastify.db.posts.findOne({ key: 'id', equals: request.params.id })
-      if (!post) {
-        reply.statusCode = 404
-        throw new Error('Not a Post with this id')
-      }
-
-      return  post
+      return await PostService.getById(fastify, request.params.id)
     }
   );
 
@@ -36,14 +31,7 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<PostEntity> {
-      const userId = await fastify.db.users.findOne({ key: 'id', equals: request.body.userId })
-
-      if (!userId) {
-        reply.statusCode = 400
-        throw new Error('Not a User with this id')
-      }
-
-      return await fastify.db.posts.create(request.body)
+      return await PostService.create(fastify, { ...request.body })
     }
   );
 
@@ -55,14 +43,7 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<PostEntity> {
-      const post = await fastify.db.posts.findOne({ key: 'id', equals: request.params.id })
-
-      if (!post) {
-        reply.statusCode = 400
-        throw new Error("Not a User with this id")
-      }
-
-      return await fastify.db.posts.delete(request.params.id)
+      return await PostService.delete(fastify, request.params.id)
     }
   );
 
@@ -75,13 +56,7 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<PostEntity> {
-      const posts = await fastify.db.posts.findOne({ key: 'id', equals: request.params.id })
-      if (!posts) {
-        reply.statusCode = 400
-        throw new Error('Not a User with this id')
-      }
-
-      return await fastify.db.posts.change(request.params.id, request.body)
+      return await PostService.update(fastify, { ...request.body, id: request.params.id })
     }
   );
 };
