@@ -9,7 +9,7 @@ export const MemberGQLType = new GraphQLObjectType({
   }),
 });
 
-export const updateMemberInput = new GraphQLInputObjectType({
+export const UpdateMemberInput = new GraphQLInputObjectType({
   name: 'updateMemberInput',
   fields: {
     id: { type: new GraphQLNonNull(GraphQLID) },

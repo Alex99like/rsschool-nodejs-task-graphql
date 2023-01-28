@@ -17,5 +17,16 @@ export const axios = {
     })
 
     return await res.json()
+  },
+  pathc: async <T>(search: string, id: string, body: string): Promise<T> => {
+    const res = await fetch(`${BASE_URL}/${search}/${id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    })
+
+    return await res.json()
   }
 }

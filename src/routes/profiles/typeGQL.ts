@@ -17,8 +17,8 @@ export const ProfileGQLType = new GraphQLObjectType({
   }),
 });
 
-export const addProfileInput = new GraphQLInputObjectType({
-  name: 'addProfileInput',
+export const CreateProfileInput = new GraphQLInputObjectType({
+  name: 'createProfileInput',
   fields: {
     avatar: { type: new GraphQLNonNull(GraphQLString) },
     sex: { type: new GraphQLNonNull(GraphQLString) },
@@ -31,7 +31,7 @@ export const addProfileInput = new GraphQLInputObjectType({
   },
 });
 
-export const updateProfileInput = new GraphQLInputObjectType({
+export const UpdateProfileInput = new GraphQLInputObjectType({
   name: 'updateProfileInput',
   fields: {
     id: { type: new GraphQLNonNull(GraphQLID) },
