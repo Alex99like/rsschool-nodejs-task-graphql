@@ -22,7 +22,7 @@ import {MemberTypeService} from "../member-types/services";
 export const RootMutation = async (fastify: FastifyInstance): Promise<GraphQLObjectType> => new GraphQLObjectType({
   name: 'RootMutation',
   fields: {
-    addUser: {
+    createUser: {
       type: UserGQLType,
       args: { input: { type: CreateUserInput } },
       async resolve(
@@ -42,7 +42,7 @@ export const RootMutation = async (fastify: FastifyInstance): Promise<GraphQLObj
         return await UserService.update(fastify,input)
       },
     },
-    addProfile: {
+    createProfile: {
       type: ProfileGQLType,
       args: { input: { type: CreateProfileInput } },
       async resolve(
@@ -62,7 +62,7 @@ export const RootMutation = async (fastify: FastifyInstance): Promise<GraphQLObj
         return await ProfileService.update(fastify, input)
       }
     },
-    addPost: {
+    createPost: {
       type: PostGQLType,
       args: { input: { type: CreatePostInput } },
       async resolve(

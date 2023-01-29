@@ -18,18 +18,19 @@ export const UserGQLType: GraphQLObjectType = new GraphQLObjectType({
     firstName: { type: new GraphQLNonNull(GraphQLString) },
     lastName: { type: new GraphQLNonNull(GraphQLString) },
     email: { type: new GraphQLNonNull(GraphQLString) },
-    subscribedToUser: {
-      type: new GraphQLList(UserGQLType),
-      async resolve(parent: UserEntity, args, fastify: FastifyInstance) {
-        const users = await fastify.db.users.findMany()
-        return users.filter(user => user.subscribedToUserIds.includes(parent.id))
-      }
-    },
+    subscribedToUserIds: { type: new GraphQLList(GraphQLID) },
     usersSubscribedTo: {
       type: new GraphQLList(UserGQLType),
       async resolve(parent: UserEntity, args, fastify: FastifyInstance) {
         const users = await fastify.db.users.findMany()
         return users.filter(user => parent.subscribedToUserIds.includes(user.id))
+      }
+    },
+    subscribedToUser: {
+      type: new GraphQLList(UserGQLType),
+      async resolve(parent: UserEntity, args, fastify: FastifyInstance) {
+        const users = await fastify.db.users.findMany()
+        return users.filter(user => user.subscribedToUserIds.includes(parent.id))
       }
     },
     profile: {
@@ -44,8 +45,6 @@ export const UserGQLType: GraphQLObjectType = new GraphQLObjectType({
         return await fastify.db.posts.findMany({ key: 'userId', equals: parent.id })
       }
     },
-    memberType: { type: new GraphQLNonNull(GraphQLString) },
-    subscribedToUserIds: { type: new GraphQLList(GraphQLID) }
   })
 })
 

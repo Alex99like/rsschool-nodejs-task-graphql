@@ -22,7 +22,7 @@ export const UserService = {
     if (!user) {
       throw fastify.httpErrors.badRequest(ERROR_MESSAGE.USER_NOTFOUND)
     }
-
+    //const { firstName, lastName, email } = input
     return await fastify.db.users.change(user.id, input)
   },
   delete: async (fastify: FastifyInstance, userId: string): Promise<UserEntity> => {
@@ -31,8 +31,8 @@ export const UserService = {
       throw fastify.httpErrors.badRequest(ERROR_MESSAGE.USER_NOTFOUND)
     }
 
-    const profile = (await fastify.db.profiles.findMany()).find(el => el.userId === user.id)
-    const posts = (await fastify.db.posts.findMany()).filter(post => post.userId === user.id)
+    const profile = await fastify.db.profiles.findOne({ key: 'userId', equals: userId })
+    const posts = await fastify.db.posts.findMany({ key: 'userId', equals: userId })
     const users = (await fastify.db.users.findMany()).filter(el => el.subscribedToUserIds.includes(user.id))
 
     if (profile) await fastify.db.profiles.delete(profile.id)
@@ -65,14 +65,14 @@ export const UserService = {
       }
     }
 
-    throw fastify.httpErrors.badRequest('Invalid body request or id')
+    throw fastify.httpErrors.badRequest(ERROR_MESSAGE.INVALID_BODY)
   },
   unSubscribeUser: async (fastify: FastifyInstance, input: { id: string, userId: string }) => {
     const user = await fastify.db.users.findOne({ key: 'id', equals: input.userId })
     const subscribeUser = await fastify.db.users.findOne({ key: 'id', equals: input.id })
 
     if (!subscribeUser || !user || !user.subscribedToUserIds.includes(input.id)) {
-      throw fastify.httpErrors.badRequest('Invalid body request or id')
+      throw fastify.httpErrors.badRequest(ERROR_MESSAGE.INVALID_BODY)
     }
 
     user.subscribedToUserIds = user.subscribedToUserIds.filter(id => id !== input.id)
