@@ -1,5 +1,6 @@
 import {FastifyInstance} from "fastify";
 import {UserEntity} from "../../utils/DB/entities/DBUsers";
+import {ERROR_MESSAGE} from "../../helpers/ErrorMessages";
 
 export const UserService = {
   getAll: async (fastify: FastifyInstance): Promise<UserEntity[]> => {
@@ -8,7 +9,7 @@ export const UserService = {
   getById: async (fastify: FastifyInstance, id: string): Promise<UserEntity> => {
     const user = await fastify.db.users.findOne({ key: 'id', equals: id })
     if (!user) {
-      throw fastify.httpErrors.notFound('User Not Found')
+      throw fastify.httpErrors.notFound(ERROR_MESSAGE.USER_NOTFOUND)
     }
 
     return user
@@ -19,7 +20,7 @@ export const UserService = {
   update: async (fastify: FastifyInstance, input: Partial<Omit<UserEntity, 'subscribedToUserIds'>>): Promise<UserEntity> => {
     const user = await fastify.db.users.findOne({ key: 'id', equals: input.id || '' })
     if (!user) {
-      throw fastify.httpErrors.badRequest('User by id not Found')
+      throw fastify.httpErrors.badRequest(ERROR_MESSAGE.USER_NOTFOUND)
     }
 
     return await fastify.db.users.change(user.id, input)
@@ -27,7 +28,7 @@ export const UserService = {
   delete: async (fastify: FastifyInstance, userId: string): Promise<UserEntity> => {
     const user = await fastify.db.users.findOne({ key: 'id', equals: userId })
     if (!user) {
-      throw fastify.httpErrors.badRequest('Invalid request body')
+      throw fastify.httpErrors.badRequest(ERROR_MESSAGE.USER_NOTFOUND)
     }
 
     const profile = (await fastify.db.profiles.findMany()).find(el => el.userId === user.id)
@@ -75,6 +76,8 @@ export const UserService = {
     }
 
     user.subscribedToUserIds = user.subscribedToUserIds.filter(id => id !== input.id)
-    return await fastify.db.users.change(user.id, user)
+    await fastify.db.users.change(user.id, user)
+
+    return subscribeUser
   }
 }

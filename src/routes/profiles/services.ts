@@ -1,5 +1,6 @@
 import {FastifyInstance} from "fastify";
 import {ProfileEntity} from "../../utils/DB/entities/DBProfiles";
+import {ERROR_MESSAGE} from "../../helpers/ErrorMessages";
 
 export const ProfileService = {
   getAll: async (fastify: FastifyInstance): Promise<ProfileEntity[]> => {
@@ -8,7 +9,7 @@ export const ProfileService = {
   getById: async (fastify: FastifyInstance, profileId: string, key: keyof ProfileEntity = 'id'): Promise<ProfileEntity> => {
     const profile = await fastify.db.profiles.findOne({ key: key, equals: profileId })
     if (!profile) {
-      throw fastify.httpErrors.notFound('No profile by id')
+      throw fastify.httpErrors.notFound(ERROR_MESSAGE.PROFILE_NOTFOUND)
     }
 
     return profile
@@ -19,30 +20,30 @@ export const ProfileService = {
     const checkProfile = (await fastify.db.profiles.findMany()).find(profile => profile.userId === user?.id)
 
     if (!user || !memberType || checkProfile) {
-      throw fastify.httpErrors.badRequest()
+      throw fastify.httpErrors.badRequest(ERROR_MESSAGE.INVALID_BODY)
     }
 
     const profile = await fastify.db.profiles.create(input)
 
     if (profile) return profile
-    else throw fastify.httpErrors.badRequest()
+    else throw fastify.httpErrors.badRequest(ERROR_MESSAGE.INVALID_BODY)
   },
   update: async (fastify: FastifyInstance, input: Omit<Partial<ProfileEntity>, 'userId'>) => {
     const checkProfile = await fastify.db.profiles.findOne({ key: 'id', equals: input.id || '' })
 
     if (!checkProfile) {
-      throw fastify.httpErrors.badRequest('Profile Not Found')
+      throw fastify.httpErrors.badRequest(ERROR_MESSAGE.PROFILE_NOTFOUND)
     }
 
     const profile = await fastify.db.profiles.change(checkProfile.id, input)
 
     if (profile) return profile
-    else throw fastify.httpErrors.badRequest('No valid Body')
+    else throw fastify.httpErrors.badRequest(ERROR_MESSAGE.INVALID_BODY)
   },
   delete: async (fastify: FastifyInstance, profileId: string) => {
     const profile = await fastify.db.profiles.findOne({ key: 'id', equals: profileId })
     if (!profile) {
-      throw fastify.httpErrors.badRequest('No profile by id')
+      throw fastify.httpErrors.badRequest(ERROR_MESSAGE.PROFILE_NOTFOUND)
     }
 
     return await fastify.db.profiles.delete(profileId)
