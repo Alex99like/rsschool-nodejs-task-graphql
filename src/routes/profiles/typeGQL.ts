@@ -14,7 +14,8 @@ export const ProfileGQLType = new GraphQLObjectType({
     street: { type: new GraphQLNonNull(GraphQLString) },
     city: { type: new GraphQLNonNull(GraphQLString) },
     userId: { type: new GraphQLNonNull(GraphQLID) },
-    memberTypeId: {
+    memberTypeId: { type: new GraphQLNonNull(GraphQLID) },
+    memberType: {
       type: MemberGQLType,
       async resolve(parent: ProfileEntity, args, fastify: FastifyInstance) {
         return await fastify.db.memberTypes.findOne({ key: 'id', equals: parent.memberTypeId })
