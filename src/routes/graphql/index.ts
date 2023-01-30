@@ -4,6 +4,7 @@ import {graphql, GraphQLSchema, validate, parse} from "graphql";
 import {RootQuery} from "./rootQuery";
 import {RootMutation} from "./rootMutation";
 import * as depthLimit from "graphql-depth-limit";
+import {createLoaders} from "../../dataloader/dataload";
 
 const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
   fastify
@@ -16,8 +17,11 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply) {
+
+      const loaders = createLoaders(fastify)
+
       const schema = new GraphQLSchema({
-        query: await RootQuery(fastify),
+        query: await RootQuery(fastify, loaders),
         mutation: await RootMutation(fastify),
       })
 
