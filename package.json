@@ -27,6 +27,7 @@
     "@fastify/autoload": "^5.0.0",
     "@fastify/sensible": "^5.0.0",
     "@fastify/type-provider-json-schema-to-ts": "^2.1.1",
+    "@types/node-fetch": "^2.6.2",
     "dataloader": "^2.1.0",
     "fastify": "^4.0.0",
     "fastify-cli": "^5.5.1",
