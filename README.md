@@ -1,3 +1,479 @@
+1. Task:  [Task](https://github.com/AlreadyBored/nodejs-assignments/blob/main/assignments/graphql-service/assignment.md)
+2. Solution: [Repository with solution](https://github.com/Alex99like/rsschool-nodejs-task-graphql/tree/develop)
+
+
+### ***Types***
+```
+Post {
+  id: ID
+  content: String
+  title: String
+  userId: ID
+}
+```
+```
+MemberType {
+  id: ID
+  discount: Number
+  monthPostsLimit: Number
+}
+```
+```
+Profile {
+  id: ID
+  userId: ID
+  avatar: String
+  sex: String
+  birthday: Number
+  country: String
+  street: String
+  city: String
+  memberType: MemberType
+  memberTypeId: ID
+}
+```
+```
+User {
+  id: ID
+  firstName: String
+  lastName: String
+  email: String
+  posts: [Post]
+  profile: Profile
+  subscribedToUserIds: [ID]
+  usersSubscribedTo: [User]
+  subscribedToUser: [User]
+}
+```
+:white_check_mark: (+72) Task 1: restful endpoints.
+:white_check_mark: (+72) Subtasks 2.1-2.7: get gql queries.
+- [x] 2.1. Получение пользователей, профилей, записей, типов участников - 4 операции в одном запросе.
+```
+{
+  users { ...User }
+  posts { ...Post }
+  profiles { ...Profile }
+  memberTypeId { ...MemberType } 
+}
+```
+#### Example
+```
+{
+  users {id firstName lastName email subscribedToUserIds}
+  posts {id content title userId}
+  profiles {id avatar sex birthday country street city userId memberTypeId {id}}
+  memberTypes {id discount monthPostsLimit}
+}
+
+```
+- [x] 2.2 Получение пользователя, профиля, записи, memberType по id - 4 операции в одном запросе.
+```
+{
+  user(id: ID) { ...User }
+  posts(id: ID) { ...Post }
+  profile(id: ID) { ...Profile }
+  memberType(id: ID) { ...MemberType } 
+}
+```
+#### Example
+```
+{
+  user(id: 'sada-213-wda') {id firstName lastName email subscribedToUserIds}
+  post(id: 'id: 'sada-213-wda') {id content title userId}
+  profile(id: 'id: 'sada-213-wda'') {id avatar sex birthday country street city userId memberTypeId {id}}
+  memberType(id: 'sada-213-wda') {id discount monthPostsLimit}
+}
+```
+
+- [x] 2.3. Получайте пользователей с их постами, профилями, типами участников.
+```
+{
+ users {
+    posts { ...Post }
+    profile {
+      ...Profile
+      memberType: { ...MemberType } 
+    }
+  }
+}
+```
+#### Example
+```
+{
+   users {
+     posts {id content userId title}
+     profile {id avatar sex birthday country street city userId memberTypeId memberType {id discount monthPostsLimit}}
+  }
+}
+```
+- [x] 2.4 Получить пользователя по id с его постами, профилем, типом участника.
+```
+{
+ user(id: ID) {
+    posts { ...Post }
+    profile {
+      ...Profile
+      memberType: { ...MemberType } 
+    }
+  }
+}
+```
+#### Example
+```
+{
+   user(id: 'sdasd-dsa2-12') {
+     posts {id content userId title}
+     profile {id avatar sex birthday country street city userId memberType {id discount monthPostsLimit}}
+  }
+}
+```
+- [x] 2.5. Получайте пользователей с их профилем
+```
+{
+  users {
+    profile { ...Profile }
+  }
+}
+```
+#### Example
+```
+{
+  users {id firstName lastName email 
+  profile {id avatar sex birthday country street city userId memberTypeId {id discount monthPostsLimit}}}
+}
+```
+
+- [x] 2.6. Получить пользователя по id с его , постами.
+```
+{
+  user(id: ID) {
+    posts { ...Posts }
+  }
+}
+```
+#### Example
+```
+{
+   users {
+     id firstName lastName email
+     posts {id content title userId}
+   }
+}
+```
+- [x] 2.7. Получите пользователей со своим userSubscribedTo, subscribedToUser
+```
+{
+  users {
+    usersSubscribedTo: [User]
+    subscribedToUser: [User]
+  }
+}
+```
+#### Example
+```
+{
+   users {
+     usersSubscribedTo {id firstName lastName email}
+     subscribedToUser {id firstName lastName email}
+  }
+}
+```
+:white_check_mark: (+54) Subtasks 2.8-2.11: create gql queries.
+### ***Input Types***
+- [x] 2.11. InputObjectType для объектов DTO.
+```
+createUserInput {
+  firstName: String!
+  lastName: String!
+  email: String!
+}
+```
+```
+createProfileInput {
+  userId: ID!
+  avatar: String!
+  sex: String!
+  birthday: Number!
+  country: String!
+  street: String!
+  city: String!
+  memberTypeId: ID!
+}
+```
+```
+createInputPost {
+  content: String!
+  title: String!
+  userId: ID!
+}
+```
+:white_check_mark: (+54 Subtasks 2.12-2.17: update gql queries.
+- [x] 2.8. Создать пользователя.
+```
+mutation {
+  createUser (input: createUserInput) { ...User }
+}
+```
+#### Example
+```
+mutation {
+  createUser(input: {
+    firstName: "name one"
+    lastName: "last one"
+    email: "test@test"
+  }) {
+    id
+    email
+    firstName
+    lastName
+  }
+}
+```
+- [x] 2.9. Создание профиля.
+```
+mutation {
+  createProfile (input: createProfileInput) { ...Profile}
+}
+```
+#### Example
+```
+mutation {
+  createProfile(input: {
+    avatar: "avatar"
+    sex: "men"
+    birthday: 1902
+    country: "RB"
+    street: "bayker"
+    city: "Minsk"
+    memberTypeId: "basic"
+    userId: "de202322-09bf-4bfe-8cff-482f0edb23e6"
+  }) {
+    id
+    avatar
+    sex
+    birthday
+    country
+    street
+    city
+    userId
+    memberTypeId {
+      id
+      discount
+      monthPostsLimit
+    }
+  }
+}
+```
+- [x] 2.10. Создать пост..
+```
+mutation {
+  createPost (input: createPostInput) { ...Post }
+}
+```
+#### Example
+```
+mutation {
+  createPost(input: {
+    content: "content"
+    title: "title"
+    userId: "e86faae8-665b-43f6-9ab7-1bc4d6272a62"
+  }) {
+    id
+    content
+    title
+    userId
+  }
+}
+```
+:white_check_mark: (+54) Subtasks 2.12-2.17: update gql queries.
+
+### ***Input Types***
+InputObjectType для объектов DTO.
+```
+updateUserInput {
+  id: ID
+  firstName: String?
+  lastName: String?
+  email: String?
+}
+```
+```
+updateProfileInput {
+  id: ID!
+  avatar: String?
+  sex: String?
+  birthday: Number?
+  country: String?
+  street: String?
+  city: String?
+  memberTypeId: ID?
+}
+```
+```
+updateInputPost {
+  id: ID!
+  content: String?
+  title: String?
+}
+```
+```
+updateMemberInput {
+  id: ID!
+  discount: Number?
+  monthPostsLimit: Number?
+}
+```
+```
+subscribeUserInput {
+  id: ID!
+  userId: ID!
+}
+```
+```
+unSubscribeUserInput {
+  id: ID!
+  userId: ID!
+}
+```
+- [x] 2.12. Обновление пользователя.
+```
+mutation {
+  updateUser(input: updateUserInput) { ...User }
+}
+```
+#### Example
+```
+mutation {
+  updateUser(input: {
+    id: "user-id"
+    firstName: "name one 1"
+    lastName: "last one 1"
+    email: "test@test 1"
+  }) {
+    id
+    email
+    firstName
+    lastName
+  }
+}
+```
+- [x] 2.13. Обновление профиля.
+```
+mutation {
+  updateProfile(input: updateProfileInput) { ...Profile }
+}
+```
+#### Example
+```
+mutation {
+  createProfile(input: {
+    id: "profile-id"
+    avatar: "avatar"
+    sex: "men"
+    birthday: 1932
+    country: "RB"
+    street: "bayker1"
+    city: "Minsk1"
+    memberTypeId: "basic1"
+  }) {
+    id
+    avatar
+    sex
+    birthday
+    country
+    street
+    city
+    userId
+    memberTypeId {
+      id
+      discount
+      monthPostsLimit
+    }
+  }
+}
+```
+- [x] 2.14. Обновление поста.
+```
+mutation {
+  updatePost(input: updatePostInput) { ...Post}
+}
+```
+#### Example
+```
+mutation {
+  updatePost(input: {
+    content: "content"
+    id: "e86faae8-665b-43f6-9ab7-1bc4d6272a62"
+  }) {
+    id
+    content
+    title
+    userId
+  }
+}
+```
+- [x] 2.15. Обновление Memer Type.
+```
+mutation {
+  updateMemberType(input: updateMemberInput) { ...MemberType }
+}
+```
+#### Example
+```
+mutation {
+  updateMemberType(input: {
+    id: "basic"
+    discount: 1000
+    monthPostsLimit: 1000
+  }) {
+    id
+    discount
+    monthPostsLimit
+  }
+}
+```
+- [x] 2.16. Подписаться на; отписаться от.
+```
+mutation {
+  subscribeUser(input: subscribeUserInput) { ...User }
+}
+```
+#### Example
+```
+mutation {
+  subscribeUser(input: {
+    id: "e587577e-f928-4541-b682-ebe9f8d66416"
+    userId: "1234124-f928-4541-3daw-21312dadfwda"
+  }) {
+    id
+    firstName
+    lastName
+    email
+  }
+}
+```
+```
+mutation {
+  unSubscribeUser(input: unSubscribeUserInput) { ...User }
+}
+```
+#### Example
+```
+mutation {
+  unSubscribeUser(input: {
+    id: "e587577e-f928-4541-b682-ebe9f8d66416"
+    userId: "1234124-f928-4541-3daw-21312dadfwda"
+  }) {
+    id
+    firstName
+    lastName
+    email
+  }
+}
+```
+
+:white_check_mark:  (+88) Task 3: solve n+1 graphql problem.
+:white_check_mark:  (+20) Task 4: limit the complexity of the graphql queries.
 ## Assignment: Graphql
 ### Tasks:
 1. Add logic to the restful endpoints (users, posts, profiles, member-types folders in ./src/routes).  
